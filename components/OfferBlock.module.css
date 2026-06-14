@@ -1,0 +1,163 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(90deg, #43a047, #4caf50);
+  padding-bottom: 8px;
+}
+
+.topBanner {
+  color: white;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.campaignName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.timerContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.timerBoxes {
+  display: flex;
+  gap: 2px;
+}
+
+.timeBox {
+  background-color: rgba(0, 0, 0, 0.15);
+  padding: 3px 4px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.priceCard {
+  background: linear-gradient(to bottom, #FFEAE6 0%, #FFFFFF 40%);
+  margin: 0 8px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.priceGrid {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mainPriceCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.priceLabel {
+  font-size: 11px;
+  color: #ff4d4f; /* Matches "Preço Oferta" color in the image */
+  font-weight: 600;
+  margin-bottom: -2px;
+}
+
+.currentPrice {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ff4d4f;
+  display: flex;
+  align-items: flex-start;
+  letter-spacing: -0.5px;
+}
+
+.currency {
+  font-size: 14px;
+  margin-top: 4px;
+  margin-right: 2px;
+}
+
+.mathSign {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 6px;
+  font-weight: 400;
+}
+
+.oldPriceCol {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2px;
+}
+
+.oldPriceLabel {
+  font-size: 10px;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.oldPriceValue {
+  font-size: 13px;
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.couponCol {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2px;
+}
+
+.couponLabel {
+  font-size: 10px;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.couponValue {
+  font-size: 13px;
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.installmentsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+
+.installmentsHighlight {
+  color: #ff4d4f;
+  font-weight: 600;
+}
+
+.soldCount {
+  color: var(--color-text-muted);
+}
+
+.badgesRow {
+  display: flex;
+  align-items: center;
+}
+
+.discountBadge {
+  color: #ff4d4f;
+  border: 1px solid rgba(255, 77, 79, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(255, 77, 79, 0.05);
+}
