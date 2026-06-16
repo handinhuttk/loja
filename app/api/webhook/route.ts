@@ -2,32 +2,25 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    // A maioria dos gateways envia um JSON no corpo (body) da requisição
     const payload = await request.json();
     
-    console.log('📦 Webhook Recebido da Sync Pay:', payload);
+    console.log('📦 Webhook Recebido da FortPay:', payload);
 
-    // Aqui você processaria a lógica de aprovação. Por exemplo:
-    // 1. Pegar o ID do pedido no payload
-    // 2. Verificar o status (ex: status === 'approved' ou 'paid')
-    // 3. Atualizar o banco de dados marcando o pedido como pago
-    // 4. Disparar email/mensagem no WhatsApp para o cliente
+    // Na FortPay, o status de sucesso vem como "paid"
+    const status = payload.status;
+    const transactionHash = payload.transaction_hash;
 
-    const status = payload.status || payload.event;
-
-    if (status === 'approved' || status === 'paid' || status === 'pix_paid') {
-      console.log('✅ Pagamento PIX aprovado com sucesso!');
-      // Atualize o status do pedido no seu banco de dados
+    if (status === 'paid') {
+      console.log(`✅ Pagamento PIX da transação ${transactionHash} aprovado com sucesso!`);
+      // Aqui você atualiza o status do pedido no seu banco de dados
+      // Exemplo: await db.orders.update({ where: { hash: transactionHash }, data: { status: 'PAID' } })
     }
 
-    // É OBRIGATÓRIO responder com status 200 rapidamente
-    // para que o Gateway saiba que você recebeu a notificação.
+    // É OBRIGATÓRIO responder com status 200 para a FortPay saber que recebemos
     return NextResponse.json({ received: true }, { status: 200 });
 
   } catch (error) {
-    console.error('Erro ao processar o Webhook:', error);
-    // Mesmo em caso de erro, às vezes é bom retornar 200 para o gateway não ficar repetindo indefinidamente,
-    // mas o padrão HTTP para erro é 500 ou 400.
+    console.error('Erro ao processar o Webhook da FortPay:', error);
     return NextResponse.json({ error: 'Erro no servidor' }, { status: 500 });
   }
 }

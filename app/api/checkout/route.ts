@@ -3,35 +3,81 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { nome, cpf, email } = body;
+    const { nome, cpf, email, telefone, cep, logradouro, numero, bairro, localidade, uf } = body;
 
-    const clientId = process.env.GATEWAY_CLIENT_ID;
-    const clientSecret = process.env.GATEWAY_CLIENT_SECRET;
+    const apiToken = process.env.FORTPAY_API_TOKEN;
+    const offerHash = process.env.FORTPAY_OFFER_HASH;
+    const productHash = process.env.FORTPAY_PRODUCT_HASH;
 
-    if (!clientId || !clientSecret) {
-      return NextResponse.json({ error: 'Credenciais do Gateway não configuradas.' }, { status: 500 });
+    if (!apiToken || !offerHash || !productHash) {
+      return NextResponse.json({ error: 'Credenciais da FortPay não configuradas no servidor.' }, { status: 500 });
     }
 
-    // AQUI ENTRA A INTEGRAÇÃO REAL COM O GATEWAY
-    // Como você ainda não informou qual é a empresa do gateway (Ex: Efí, Asaas, etc),
-    // estamos simulando o tempo de processamento de uma requisição HTTP real para a API deles.
-    
-    // Simula a latência da rede com a API bancária (1.5 segundos)
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // Limpar document e phone (apenas números)
+    const cleanDocument = cpf?.replace(/\D/g, '') || '';
+    const cleanPhone = telefone?.replace(/\D/g, '') || '';
+    const cleanCep = cep?.replace(/\D/g, '') || '';
 
-    // Exemplo de Payload de Sucesso do Gateway (Simulado para a UI funcionar agora)
-    const mockPixCopiaECola = `00020101021126580014br.gov.bcb.pix0136${clientId}520400005303986540568.305802BR5913${nome?.substring(0,10) || 'Loja'}6009Sao Paulo62070503***63041A2B`;
-    
-    // Usando uma API pública para gerar a imagem do QR Code baseada no Copia e Cola
-    const mockQrCodeImage = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(mockPixCopiaECola)}`;
+    // Valor fixo R$ 68,30 em centavos = 6830
+    const amountInCents = 6830;
+
+    const fortpayPayload = {
+      amount: amountInCents,
+      offer_hash: offerHash,
+      payment_method: "pix",
+      customer: {
+        name: nome,
+        email: email,
+        phone_number: cleanPhone,
+        document: cleanDocument,
+        street_name: logradouro || "",
+        number: numero || "",
+        neighborhood: bairro || "",
+        city: localidade || "",
+        state: uf || "",
+        zip_code: cleanCep
+      },
+      cart: [
+        {
+          product_hash: productHash,
+          title: "Produto da Loja",
+          price: amountInCents,
+          quantity: 1,
+          operation_type: 1,
+          tangible: false
+        }
+      ],
+      expire_in_days: 1,
+      transaction_origin: "api",
+      postback_url: "https://ofertacopadomundobr.vercel.app/api/webhook"
+    };
+
+    const response = await fetch(`https://api.fortpayplataforma.com.br/api/public/v1/transactions?api_token=${apiToken}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(fortpayPayload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      console.error("Erro da FortPay:", data);
+      return NextResponse.json({ error: 'Erro ao gerar pagamento via FortPay.', details: data }, { status: 400 });
+    }
+
+    // A API FortPay retorna em data.data os campos hash, qr_code, pix_code
+    const pixData = data.data;
 
     return NextResponse.json({
       success: true,
-      message: 'PIX Gerado com sucesso via Gateway',
+      message: 'PIX Gerado com sucesso via FortPay',
       pix: {
-        copiaECola: mockPixCopiaECola,
-        qrCodeUrl: mockQrCodeImage,
-        expiresIn: 3600 // 1 hora
+        copiaECola: pixData.pix_code,
+        qrCodeUrl: pixData.qr_code,
+        expiresIn: 86400, // 24 horas
+        transactionHash: pixData.hash
       }
     });
 

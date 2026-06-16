@@ -101,6 +101,22 @@ export default function CheckoutDrawer({ isOpen, onClose, selectedVariant }: Che
                   <QrCode size={18} /> Copiar Código PIX
                 </button>
               </div>
+
+              {/* Security Badges para transmitir mais confiança na hora do pagamento */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '24px', flexWrap: 'wrap', borderTop: '1px solid #eaeaea', paddingTop: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  <ShieldCheck size={20} color="#22c55e" />
+                  <span style={{ fontSize: '10px', color: '#666', fontWeight: 'bold', textTransform: 'uppercase' }}>Pagamento 100% Seguro</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  <Lock size={20} color="#22c55e" />
+                  <span style={{ fontSize: '10px', color: '#666', fontWeight: 'bold', textTransform: 'uppercase' }}>Ambiente Criptografado</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  <QrCode size={20} color="#22c55e" />
+                  <span style={{ fontSize: '10px', color: '#666', fontWeight: 'bold', textTransform: 'uppercase' }}>Aprovação Imediata</span>
+                </div>
+              </div>
             </div>
           ) : (
             <>
