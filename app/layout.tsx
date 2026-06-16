@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import FacebookPixel from "@/components/FacebookPixel";
+import UtmifyScripts from "@/components/UtmifyScripts";
 
 export default function RootLayout({
   children,
@@ -27,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
+        <UtmifyScripts />
         <FacebookPixel />
         {children}
       </body>
