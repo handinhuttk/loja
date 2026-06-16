@@ -5,12 +5,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { nome, cpf, email, telefone, cep, logradouro, numero, bairro, localidade, uf } = body;
 
-    const apiToken = process.env.FORTPAY_API_TOKEN;
-    const offerHash = process.env.FORTPAY_OFFER_HASH;
-    const productHash = process.env.FORTPAY_PRODUCT_HASH;
+    const publicKey = process.env.PAYSHARK_PUBLIC_KEY;
+    const secretKey = process.env.PAYSHARK_SECRET_KEY;
 
-    if (!apiToken || !offerHash || !productHash) {
-      return NextResponse.json({ error: 'Credenciais da FortPay não configuradas no servidor.' }, { status: 500 });
+    if (!publicKey || !secretKey) {
+      return NextResponse.json({ error: 'Credenciais da Payshark não configuradas no servidor.' }, { status: 500 });
     }
 
     // Limpar document e phone (apenas números)
@@ -21,63 +20,70 @@ export async function POST(request: Request) {
     // Valor fixo R$ 68,30 em centavos = 6830
     const amountInCents = 6830;
 
-    const fortpayPayload = {
+    const paysharkPayload = {
       amount: amountInCents,
-      offer_hash: offerHash,
-      payment_method: "pix",
+      paymentMethod: "pix",
       customer: {
         name: nome,
         email: email,
-        phone_number: cleanPhone,
-        document: cleanDocument,
-        street_name: logradouro || "",
+        document: {
+          type: "cpf",
+          number: cleanDocument
+        },
+        phone: cleanPhone,
+        street: logradouro || "",
         number: numero || "",
         neighborhood: bairro || "",
         city: localidade || "",
         state: uf || "",
-        zip_code: cleanCep
+        zipCode: cleanCep
       },
-      cart: [
+      items: [
         {
-          product_hash: productHash,
           title: "Produto da Loja",
-          price: amountInCents,
+          unitPrice: amountInCents,
           quantity: 1,
-          operation_type: 1,
           tangible: false
         }
-      ],
-      expire_in_days: 1,
-      transaction_origin: "api",
-      postback_url: "https://ofertacopadomundobr.vercel.app/api/webhook"
+      ]
     };
 
-    const response = await fetch(`https://api.fortpayplataforma.com.br/api/public/v1/transactions?api_token=${apiToken}`, {
+    const authHeader = 'Basic ' + Buffer.from(`${publicKey}:${secretKey}`).toString('base64');
+
+    const response = await fetch(`https://api.paysharkgateway.com.br/v1/transactions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': authHeader
       },
-      body: JSON.stringify(fortpayPayload)
+      body: JSON.stringify(paysharkPayload)
     });
 
     const data = await response.json();
 
-    if (!response.ok || !data.success) {
-      console.error("Erro da FortPay:", data);
-      return NextResponse.json({ error: 'Erro ao gerar pagamento via FortPay.', details: data }, { status: 400 });
+    if (!response.ok) {
+      console.error("Erro da Payshark:", data);
+      return NextResponse.json({ error: 'Erro ao gerar pagamento via Payshark.', details: data }, { status: 400 });
     }
 
-    // A API FortPay retorna em data.data os campos hash, qr_code, pix_code
-    const pixData = data.data;
+    const pixData = data.pix || {};
+    const copiaECola = pixData.qrcode || ''; // A Payshark retorna a string do Pix Copia e Cola no campo qrcode
+    
+    if (!copiaECola) {
+      return NextResponse.json({ error: 'Resposta da Payshark sem dados de PIX válidos.', details: data }, { status: 400 });
+    }
+
+    // A Payshark não parece retornar a URL da imagem do QRCode, então geramos uma via API
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(copiaECola)}`;
 
     return NextResponse.json({
       success: true,
-      message: 'PIX Gerado com sucesso via FortPay',
+      message: 'PIX Gerado com sucesso via Payshark',
       pix: {
-        copiaECola: pixData.pix_code,
-        qrCodeUrl: pixData.qr_code,
+        copiaECola: copiaECola,
+        qrCodeUrl: qrCodeUrl,
         expiresIn: 86400, // 24 horas
-        transactionHash: pixData.hash
+        transactionHash: data.id || data.secureId || 'hash_desconhecido'
       }
     });
 

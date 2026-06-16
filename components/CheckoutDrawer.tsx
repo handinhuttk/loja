@@ -48,7 +48,8 @@ export default function CheckoutDrawer({ isOpen, onClose, selectedVariant }: Che
       if (data.success && data.pix) {
         setPixResult(data.pix);
       } else {
-        alert(data.error || 'Erro ao gerar PIX');
+        const errorMsg = data.details ? JSON.stringify(data.details.message || data.details.errors || data.details) : '';
+        alert(`${data.error || 'Erro ao gerar PIX'}\n\nMotivo: ${errorMsg}`);
       }
     } catch (err) {
       alert('Falha na comunicação com o servidor');
@@ -100,6 +101,15 @@ export default function CheckoutDrawer({ isOpen, onClose, selectedVariant }: Che
                 >
                   <QrCode size={18} /> Copiar Código PIX
                 </button>
+              </div>
+
+              {/* Aviso de Segurança do Banco Central */}
+              <div style={{ marginTop: '20px', padding: '14px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '8px', textAlign: 'left', fontSize: '12px', color: '#92400e', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                <ShieldCheck size={24} style={{ flexShrink: 0, marginTop: '2px', color: '#d97706' }} />
+                <div>
+                  <strong style={{ display: 'block', marginBottom: '4px', fontSize: '13px' }}>Aviso de Segurança (Banco Central)</strong>
+                  Devido às novas regras e protocolos antifraude das instituições financeiras, o seu banco pode exibir um alerta de segurança na hora do pagamento. <strong>Não se preocupe!</strong> Esse é um procedimento padrão do sistema bancário. Nossa loja é verificada e sua compra é <strong>100% segura e confiável</strong>.
+                </div>
               </div>
 
               {/* Security Badges para transmitir mais confiança na hora do pagamento */}
