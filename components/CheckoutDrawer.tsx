@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Lock, ShieldCheck, MapPin, CreditCard, QrCode, User } from 'lucide-react';
 import styles from './CheckoutDrawer.module.css';
+import { fbq } from '@/components/FacebookPixel';
 
 interface CheckoutDrawerProps {
   isOpen: boolean;
@@ -11,6 +12,12 @@ interface CheckoutDrawerProps {
 }
 
 export default function CheckoutDrawer({ isOpen, onClose, selectedVariant }: CheckoutDrawerProps) {
+  useEffect(() => {
+    if (isOpen) {
+      fbq('track', 'InitiateCheckout');
+    }
+  }, [isOpen]);
+
   const [cep, setCep] = useState('');
   const [address, setAddress] = useState({ logradouro: '', bairro: '', localidade: '', uf: '' });
   
