@@ -4,14 +4,13 @@ export async function POST(request: Request) {
   try {
     const payload = await request.json();
     
-    console.log('📦 Webhook Recebido da Payshark:', payload);
+    console.log('📦 Webhook Recebido da FortPay:', payload);
 
-    // O status e dados podem variar de acordo com o webhook da Payshark
+    // Na FortPay, o status de sucesso vem como "paid"
     const status = payload.status;
-    const transactionId = payload.id || payload.transaction_hash;
+    const transactionId = payload.transaction_hash;
     const amount = payload.amount || 6830;
     
-    // Na Payshark/Shield, status aprovado costuma ser "paid" ou "approved"
     if (status === 'paid' || status === 'approved') {
       console.log(`✅ Pagamento PIX da transação ${transactionId} aprovado com sucesso!`);
       
@@ -35,7 +34,6 @@ export async function POST(request: Request) {
                 currency: 'BRL',
                 value: parseFloat(valueInReais),
               }
-              // Opcional: enviar event_id para desduplicação e user_data (email, fbp, fbc) para maior precisão
             }
           ]
         };
@@ -57,11 +55,11 @@ export async function POST(request: Request) {
       }
     }
 
-    // É OBRIGATÓRIO responder com status 200 para a Payshark saber que recebemos
+    // É OBRIGATÓRIO responder com status 200 para a FortPay saber que recebemos
     return NextResponse.json({ received: true }, { status: 200 });
 
   } catch (error) {
-    console.error('Erro ao processar o Webhook da Payshark:', error);
+    console.error('Erro ao processar o Webhook da FortPay:', error);
     return NextResponse.json({ error: 'Erro no servidor' }, { status: 500 });
   }
 }
