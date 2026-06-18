@@ -62,22 +62,32 @@ export async function POST(request: Request) {
 
     const data = await response.json();
 
-    if (!response.ok || !data.success) {
+    // A FortPay pode retornar o objeto da transação diretamente ou dentro de um wrapper
+    const transaction = data.data || data;
+
+    if (!response.ok || !transaction.hash) {
       console.error("Erro da FortPay:", data);
       return NextResponse.json({ error: 'Erro ao gerar pagamento via FortPay.', details: data }, { status: 400 });
     }
 
-    // A API FortPay retorna em data.data os campos hash, qr_code, pix_code
-    const pixData = data.data;
+    // Extrair os dados do PIX
+    const copiaECola = transaction.pix?.pix_qr_code || transaction.pix_code || '';
+    
+    // Se a API não devolver a imagem base64, nós geramos a imagem a partir do código Copia e Cola
+    const qrCodeUrl = transaction.pix?.qr_code_base64 
+      ? `data:image/png;base64,${transaction.pix.qr_code_base64}` 
+      : transaction.qr_code 
+        ? transaction.qr_code
+        : `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(copiaECola)}`;
 
     return NextResponse.json({
       success: true,
       message: 'PIX Gerado com sucesso via FortPay',
       pix: {
-        copiaECola: pixData.pix_code,
-        qrCodeUrl: pixData.qr_code,
+        copiaECola: copiaECola,
+        qrCodeUrl: qrCodeUrl,
         expiresIn: 86400, // 24 horas
-        transactionHash: pixData.hash
+        transactionHash: transaction.hash
       }
     });
 
